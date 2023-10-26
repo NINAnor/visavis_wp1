@@ -21,47 +21,39 @@ dashboardPage(
           collapsed = TRUE,
           width = 12)
     ),
-    fluidRow(
-      br(),
-      h4("choose the radar station of interest"),
-      br(),
-      selectInput("radar_stat",
-                  "choose your radar station",
-                  radar_names,
-                  selected = NULL,
-                  multiple = FALSE)
-    ),
+    # fluidRow(
+    #   br(),
+    #   h4("choose the radar station of interest"),
+    #   br(),
+    #   selectInput("radar_stat",
+    #               "choose your radar station",
+    #               radar_names,
+    #               selected = NULL,
+    #               multiple = FALSE)
+    # ),
     fluidRow(
       box(title = "Daily migration patterns",
                  solidHeader = TRUE,
                  collapsible = TRUE,
                  collappsed = TRUE,
                  width = 12,
-          selectInput(
-            "dates",
+          sliderInput(
+            "slid_day",
             "choose day",
-            choices = dates_rad
-            # min = min(dates_rad),
-            # max = max(dates_rad),
-            # format = "yyyy-mm-dd",
-            # startview = "month",
-            # weekstart = 0,
-            # language = "en",
-            # width = NULL,
-            # autoclose = TRUE,
-            # datesdisabled = NULL,
-            # daysofweekdisabled = NULL
+            min = min(dates),
+            max = max(dates),
+            value = mean(dates)
           ),
-          actionButton("conf1", "plot"),
+          # actionButton("conf1", "plot"),
           fluidRow(
-            column(8,
+            # column(8,
                  plotlyOutput("density_time"),
-                 br(),
-                 plotlyOutput("heat_1")
-                 ),
-            column(4,
-                 h5("2D migration pattern around radar?"),
-                 leafletOutput("radar_sel"))
+                 leafletOutput("rad_dens"),
+                 # plotlyOutput("heat_1")
+                 # ),
+            # column(4,
+            #      h5("2D migration pattern around radar?"),
+            #      leafletOutput("radar_sel"))
           )
           )),
     fluidRow(
