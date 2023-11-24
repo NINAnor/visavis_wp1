@@ -13,6 +13,7 @@ library(sf)
 library(leaflet)
 library(mapview)
 library(lubridate)
+library(dygraphs)
 
 # Loading and installing packages if not already installed
 

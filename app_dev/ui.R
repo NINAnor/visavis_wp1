@@ -10,7 +10,7 @@ dashboardPage(
           status = "primary",
           solidHeader = TRUE,
           collapsible = TRUE,
-          collapsed = FALSE,
+          collapsed = TRUE,
           width = 12),
       box(title = "Radar station details",
           h5("Here we could integrate a map with some details of the radar stations that have been used"),
@@ -25,17 +25,13 @@ dashboardPage(
     #   br(),
     #   h4("choose the radar station of interest"),
     #   br(),
-    #   selectInput("radar_stat",
-    #               "choose your radar station",
-    #               radar_names,
-    #               selected = NULL,
-    #               multiple = FALSE)
+
     # ),
     fluidRow(
-      box(title = "Daily migration patterns",
+      box(title = "Hourly migration patterns all stations",
                  solidHeader = TRUE,
                  collapsible = TRUE,
-                 collappsed = TRUE,
+                 collappsed = FALSE,
                  width = 12,
           sliderInput(
             "slid_day",
@@ -47,8 +43,8 @@ dashboardPage(
           # actionButton("conf1", "plot"),
           fluidRow(
             # column(8,
-                 plotlyOutput("density_time"),
-                 leafletOutput("rad_dens"),
+            plotlyOutput("density_time"),
+            leafletOutput("rad_dens"),
                  # plotlyOutput("heat_1")
                  # ),
             # column(4,
@@ -58,19 +54,37 @@ dashboardPage(
           )),
     fluidRow(
       box(
-        title = "Weekly migration patterns",
+        title = "10-min migration single day height distribution",
         status = "primary",
         solidHeader = TRUE,
         collapsible = TRUE,
-        width = 12)),
+        collapsed = TRUE,
+        width = 12,
+        selectInput("radar_stat",
+                    "choose your radar station 1",
+                    radar_names,
+                    selected = NULL,
+                    multiple = FALSE),
+        dateInput(
+          "in_day",
+          "select date",
+          value = mean(dates),
+          min = min(dates),
+          max = max(dates),
+          format = "yyyy-mm-dd"
+        ),
+        actionButton("conf1","plot"),
+        plotlyOutput("day_rad")
+        
+        )),
     
-    fluidRow(
-      box(
-        title = "Monthly migration patterns",
-        status = "primary",
-        solidHeader = TRUE,
-        collapsible = TRUE,
-        width = 12)
-    )
+    # fluidRow(
+    #   box(
+    #     title = "Monthly migration patterns",
+    #     status = "primary",
+    #     solidHeader = TRUE,
+    #     collapsible = TRUE,
+    #     width = 12)
+    # )
   )
 )
