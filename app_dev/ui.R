@@ -28,7 +28,7 @@ dashboardPage(
 
     # ),
     fluidRow(
-      box(title = "Hourly migration patterns all stations",
+      box(title = "Daily-hourly migration patterns all stations",
                  solidHeader = TRUE,
                  collapsible = TRUE,
                  collappsed = FALSE,
@@ -43,40 +43,40 @@ dashboardPage(
           # actionButton("conf1", "plot"),
           fluidRow(
             # column(8,
-            plotlyOutput("density_time"),
+            h6("Daily mean flight direction and species denisty"),
+            br(),
             leafletOutput("rad_dens"),
-                 # plotlyOutput("heat_1")
-                 # ),
-            # column(4,
-            #      h5("2D migration pattern around radar?"),
-            #      leafletOutput("radar_sel"))
+            br(),
+            h6("Hourly bird density"),
+            # plotlyOutput("density_time"),
+            plotOutput("day_rad")
           )
-          )),
-    fluidRow(
-      box(
-        title = "10-min migration single day height distribution",
-        status = "primary",
-        solidHeader = TRUE,
-        collapsible = TRUE,
-        collapsed = TRUE,
-        width = 12,
-        selectInput("radar_stat",
-                    "choose your radar station 1",
-                    radar_names,
-                    selected = NULL,
-                    multiple = FALSE),
-        dateInput(
-          "in_day",
-          "select date",
-          value = mean(dates),
-          min = min(dates),
-          max = max(dates),
-          format = "yyyy-mm-dd"
-        ),
-        actionButton("conf1","plot"),
-        plotlyOutput("day_rad")
-        
-        )),
+          ))
+    # fluidRow(
+    #   box(
+    #     title = "10-min migration height distribution",
+    #     status = "primary",
+    #     solidHeader = TRUE,
+    #     collapsible = TRUE,
+    #     collapsed = TRUE,
+    #     width = 12,
+    #     selectInput("radar_stat",
+    #                 "choose your radar station 1",
+    #                 radar_names,
+    #                 selected = NULL,
+    #                 multiple = FALSE),
+    #     dateInput(
+    #       "in_day",
+    #       "select date",
+    #       value = mean(dates),
+    #       min = min(dates),
+    #       max = max(dates),
+    #       format = "yyyy-mm-dd"
+    #     ),
+    #     actionButton("conf1","plot"),
+    #     # plotOutput("day_rad")
+    #     
+    #     )),
     
     # fluidRow(
     #   box(

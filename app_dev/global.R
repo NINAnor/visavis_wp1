@@ -14,6 +14,7 @@ library(leaflet)
 library(mapview)
 library(lubridate)
 library(dygraphs)
+library(leaflet.minicharts)
 
 # Loading and installing packages if not already installed
 

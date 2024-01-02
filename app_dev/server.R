@@ -35,22 +35,18 @@ function(input, output, session) {
              lat_end = st_coordinates(geometry)[,2] + cos(direction_radians))
     
 
-    output$density_time<-renderPlotly(
-        plot_ly(in_graph1,
-                x = ~hour, y = ~mean_dens,
-                name = ~radar, type = "scatter",  mode="lines")
-
-    )
+    # output$density_time<-renderPlotly(
+    #     plot_ly(in_graph1,
+    #             x = ~hour, y = ~mean_dens,
+    #             name = ~radar, type = "scatter",  mode="lines")
+    # 
+    # )
     
-    # output$day_all <- renderDygraph({
-    #   dygraph(in_graph1, main = "New Haven Temperatures") %>% 
-    #     dyGroup(radar)%>%
-    #     dyRangeSelector()
-    # })
+
     ## create a map with the circles as mean daily density
     output$rad_dens<-renderLeaflet(
       leaflet() %>% addProviderTiles("CartoDB.Positron") %>% 
-        # addPolygons(data=in_map1, weight = in_map1$mean_dens, fill = F, color = "red") %>% 
+        addCircleMarkers(data = in_map1, ~st_coordinates(in_map1$geometry)[,1], ~st_coordinates(in_map1$geometry)[,2], layerId = ~unique(radar), popup = ~unique(radar))%>%
         addFlows(lng0 = st_coordinates(in_map1$geometry)[,1], 
                  lat0 = st_coordinates(in_map1$geometry)[,2],
                  lng1 = in_map1$lng_end, 
@@ -63,18 +59,20 @@ function(input, output, session) {
 
   })
   
-  ## weekly graphs 1h 
   
-  observeEvent(input$conf1,{
-    day_rad<-vp%>%filter(as.Date(date) == input$in_day & radar == input$radar_stat)%>%select(height,dens,date,datetime)
-    output$day_rad <- renderPlotly(
-      plot_ly(
-        x = day_rad$datetime, y = day_rad$height,
-        z = day_rad$dens, type = "heatmap"
-      )
-    )
-    
+  ggplot_data <- reactive({
+    site <- input$rad_dens_marker_click$id
+    print(site)
+    ggplot_data<-vp%>%filter(as.Date(date) == input$slid_day & radar == site)%>%select(height,dens,date,datetime)
   })
+  
+  output$day_rad <- renderPlot({
+    req(ggplot_data)
+    ggplot(ggplot_data(), aes(datetime, height, fill= dens)) + 
+      geom_tile()
+  }) 
+  
+
 
   
 
