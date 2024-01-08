@@ -19,7 +19,10 @@ library(leaflet.minicharts)
 # Loading and installing packages if not already installed
 
 proj_path<-"P:/312202_visavis/WP1_visualizations"
+## 10min and 10 altitudes:
 vp <- readRDS(paste0(proj_path,"/R/data/vp_table.rds"))
+
+## 5min alti integrated (1 alti per 5min)
 int_prof<-readRDS(paste0(proj_path,"/R/data/vpts_table_vertically_integrated.rds"))
 
 vp$datetime <- as.POSIXct(vp$datetime, format = "%Y-%m-%d %H:%M:%S", tz = "UTC")
@@ -28,6 +31,7 @@ int_prof$date<-as.character(as.Date(int_prof$datetime))
 
 dates<-as.Date(unique(vp$date))
 
+# Radar static data
 radars<-readRDS(paste0(proj_path,"/R/data/radar_info.rds"))
 radars<-st_as_sf(radars, coords = c("longitude","latitude"),crs=4326)
 

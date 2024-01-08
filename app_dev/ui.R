@@ -43,11 +43,11 @@ dashboardPage(
           # actionButton("conf1", "plot"),
           fluidRow(
             # column(8,
-            h6("Daily mean flight direction and species denisty"),
+            h5("Daily mean flight direction, speed, altitude and MTR"),
             br(),
             leafletOutput("rad_dens"),
             br(),
-            h6("Hourly bird density"),
+            h5("Hourly vertical bird density"),
             # plotlyOutput("density_time"),
             plotOutput("day_rad")
           )

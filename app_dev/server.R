@@ -1,24 +1,21 @@
 ## server
 function(input, output, session) {
   
-  ## render the basics
+  ## render the basic information for the radars:
   output$radar_overview<-renderLeaflet(
     mapview(radars)@map
   )
   
-  ## render the dates based on the radar station (to not have NA`s)
-  # dates_rad<-observeEvent(input$radar_stat,{
-  #   dates_rad<-vp%>%filter(radar == input$radar_stat)%>%select(date)%>%distinct()
-  #   
-  # })
+
+  vp_day<-eventReactive(input$slid_day,{
+    vp_day<-vp%>%filter(as.Date(date) == input$slid_day)
+  })
   
-  ## daily graphs 10min res
+  ## daily graphs integrated alti
   observeEvent(input$slid_day,{
     
-    # rads<-highlight_key(radar)
-    
     in_map1<-int_prof%>%filter(as.Date(date) == input$slid_day)%>%
-      select(mtr,vid,date,datetime,radar,dd,ff,mean_height)%>%group_by(radar)%>%summarise(mtr = mean(mtr, na.rm=T),
+      select(mtr,vid,date,datetime,radar,dd,ff,mean_height)%>%group_by(radar,date)%>%summarise(mtr = mean(mtr, na.rm=T),
                                                                         dd = mean(dd, na.rm = T),
                                                                         ff = mean(ff, na.rm = T),
                                                                         vid = mean(vid,na.rm = T),
@@ -28,42 +25,33 @@ function(input, output, session) {
              dd = round(dd, 2),
              lng_end = st_coordinates(geometry)[,1] + sin(direction_radians),
              lat_end = st_coordinates(geometry)[,2] + cos(direction_radians))
-    
-    # vp_day<-vp%>%filter(as.Date(date) == input$slid_day)%>%select(height,dens,date,datetime,radar,dd,ff)
-    #   
 
-    # colnames(in_graph1)<-c("radar","mtr","mean_dens","dd","ff")
-    # 
-    # in_map1<-in_graph1%>%group_by(radar)%>%
-    #     summarise(mean_dens = mean(mean_dens, na.rm=T),
-    #               dd = mean(dd, na.rm = T),
-    #               ff = mean(ff, na.rm = T))%>%
-    #     left_join(radars, by = "radar")%>%st_as_sf()%>% 
-    #   mutate(direction_radians = dd * (pi / 180), 
-    #          dd = round(dd, 2),
-    #          lng_end = st_coordinates(geometry)[,1] + sin(direction_radians),
-    #          lat_end = st_coordinates(geometry)[,2] + cos(direction_radians))
-    
 
-    # output$density_time<-renderPlotly(
-    #     plot_ly(in_graph1,
-    #             x = ~hour, y = ~mean_dens,
-    #             name = ~radar, type = "scatter",  mode="lines")
-    # 
-    # )
-    cr <- colorRamp(c("green", "red"))
+    mypal <- colorNumeric("Blues",   domain = 0:max(in_map1$mean_height)+1)
 
-    ## create a map with the circles as mean daily density
+    ## map, flight direction, speed and mean flight height
     output$rad_dens<-renderLeaflet(
-      leaflet() %>% addProviderTiles("CartoDB.Positron") %>% 
-        addCircleMarkers(data = in_map1, ~st_coordinates(in_map1$geometry)[,1], ~st_coordinates(in_map1$geometry)[,2], layerId = ~unique(radar), popup = ~unique(location_name))%>%
+      leaflet() %>% addProviderTiles("CartoDB.Positron") %>%
+        addCircleMarkers(data = in_map1, 
+                         ~st_coordinates(in_map1$geometry)[,1], ~st_coordinates(in_map1$geometry)[,2], 
+                         layerId = ~unique(radar), stroke = F)%>%
         addFlows(lng0 = st_coordinates(in_map1$geometry)[,1], 
                  lat0 = st_coordinates(in_map1$geometry)[,2],
                  lng1 = in_map1$lng_end, 
                  lat1 = in_map1$lat_end, 
                  dir = in_map1$direction_radians, 
-                 color =  rgb(cr(in_map1$mean_height / max(in_map1$mean_height)), max=255),
-                 maxThickness= in_map1$mtr*.3)
+                 color =  mypal(in_map1$mean_height),
+                 maxThickness= in_map1$mean_height / max(in_map1$mean_height)*3,
+                 popup = popupArgs(showTitle = TRUE,
+                                   supLabels  = c("NR","Radar station","Mean flight height","MTR","Ground speed [m/s]"),
+                                   supValues = in_map1[c(11,7,3,5)]%>%st_drop_geometry(),
+                                   digits = 0
+                                   ))%>%
+        addLegend("bottomright", 
+                  title = "Flight height",
+                  pal = mypal,
+                  values = in_map1$mean_height,
+                  opacity = 1)
     )
     
     
@@ -71,11 +59,12 @@ function(input, output, session) {
 
   })
   
-  
+ #click on the arrow and see the daily details 
   ggplot_data <- reactive({
+    req(vp_day)
+    req(input$rad_dens_marker_click$id)
     site <- input$rad_dens_marker_click$id
-    print(site)
-    ggplot_data<-vp%>%filter(as.Date(date) == input$slid_day & radar == site)%>%select(height,dens,date,datetime)
+    ggplot_data<-vp_day()%>%filter(radar == site)%>%select(height,dens,date,datetime)
   })
   
   output$day_rad <- renderPlot({
