@@ -17,22 +17,32 @@ function(input, output, session) {
     
     # rads<-highlight_key(radar)
     
-    in_day<-vp%>%filter(as.Date(date) == input$slid_day)%>%select(height,dens,date,datetime,radar,dd,ff)
-      
-    in_graph1<-in_day%>%group_by(radar,hour(datetime))%>%summarise(mean_dens = mean(dens, na.rm=T),
-                                                                   dd = mean(dd, na.rm = T),
-                                                                   ff = mean(ff, na.rm = T))%>%ungroup()
-    colnames(in_graph1)<-c("radar","hour","mean_dens","dd","ff")
-    
-    in_map1<-in_graph1%>%group_by(radar)%>%
-        summarise(mean_dens = mean(mean_dens, na.rm=T),
-                  dd = mean(dd, na.rm = T),
-                  ff = mean(ff, na.rm = T))%>%
-        left_join(radars, by = "radar")%>%st_as_sf()%>% 
+    in_map1<-int_prof%>%filter(as.Date(date) == input$slid_day)%>%
+      select(mtr,vid,date,datetime,radar,dd,ff,mean_height)%>%group_by(radar)%>%summarise(mtr = mean(mtr, na.rm=T),
+                                                                        dd = mean(dd, na.rm = T),
+                                                                        ff = mean(ff, na.rm = T),
+                                                                        vid = mean(vid,na.rm = T),
+                                                                        mean_height = mean(mean_height,na.rm=T))%>%ungroup()%>%
+      left_join(radars, by = "radar")%>%st_as_sf()%>% 
       mutate(direction_radians = dd * (pi / 180), 
              dd = round(dd, 2),
              lng_end = st_coordinates(geometry)[,1] + sin(direction_radians),
              lat_end = st_coordinates(geometry)[,2] + cos(direction_radians))
+    
+    # vp_day<-vp%>%filter(as.Date(date) == input$slid_day)%>%select(height,dens,date,datetime,radar,dd,ff)
+    #   
+
+    # colnames(in_graph1)<-c("radar","mtr","mean_dens","dd","ff")
+    # 
+    # in_map1<-in_graph1%>%group_by(radar)%>%
+    #     summarise(mean_dens = mean(mean_dens, na.rm=T),
+    #               dd = mean(dd, na.rm = T),
+    #               ff = mean(ff, na.rm = T))%>%
+    #     left_join(radars, by = "radar")%>%st_as_sf()%>% 
+    #   mutate(direction_radians = dd * (pi / 180), 
+    #          dd = round(dd, 2),
+    #          lng_end = st_coordinates(geometry)[,1] + sin(direction_radians),
+    #          lat_end = st_coordinates(geometry)[,2] + cos(direction_radians))
     
 
     # output$density_time<-renderPlotly(
@@ -41,17 +51,19 @@ function(input, output, session) {
     #             name = ~radar, type = "scatter",  mode="lines")
     # 
     # )
-    
+    cr <- colorRamp(c("green", "red"))
 
     ## create a map with the circles as mean daily density
     output$rad_dens<-renderLeaflet(
       leaflet() %>% addProviderTiles("CartoDB.Positron") %>% 
-        addCircleMarkers(data = in_map1, ~st_coordinates(in_map1$geometry)[,1], ~st_coordinates(in_map1$geometry)[,2], layerId = ~unique(radar), popup = ~unique(radar))%>%
+        addCircleMarkers(data = in_map1, ~st_coordinates(in_map1$geometry)[,1], ~st_coordinates(in_map1$geometry)[,2], layerId = ~unique(radar), popup = ~unique(location_name))%>%
         addFlows(lng0 = st_coordinates(in_map1$geometry)[,1], 
                  lat0 = st_coordinates(in_map1$geometry)[,2],
                  lng1 = in_map1$lng_end, 
                  lat1 = in_map1$lat_end, 
-                 dir = in_map1$direction_radians, maxThickness= 0.85)
+                 dir = in_map1$direction_radians, 
+                 color =  rgb(cr(in_map1$mean_height / max(in_map1$mean_height)), max=255),
+                 maxThickness= in_map1$mtr*.3)
     )
     
     

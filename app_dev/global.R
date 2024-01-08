@@ -20,8 +20,11 @@ library(leaflet.minicharts)
 
 proj_path<-"P:/312202_visavis/WP1_visualizations"
 vp <- readRDS(paste0(proj_path,"/R/data/vp_table.rds"))
+int_prof<-readRDS(paste0(proj_path,"/R/data/vpts_table_vertically_integrated.rds"))
+
 vp$datetime <- as.POSIXct(vp$datetime, format = "%Y-%m-%d %H:%M:%S", tz = "UTC")
 vp$date<-as.character(as.Date(vp$datetime))
+int_prof$date<-as.character(as.Date(int_prof$datetime))
 
 dates<-as.Date(unique(vp$date))
 
@@ -30,5 +33,5 @@ radars<-st_as_sf(radars, coords = c("longitude","latitude"),crs=4326)
 
 
 # vp <- separate(data = vp, col = datetime, into  = c('Date', 'Time'), sep = ' ')
-radar_names<-vp%>%distinct(radar)
+radar_names<-radars%>%distinct(location_name)
 
