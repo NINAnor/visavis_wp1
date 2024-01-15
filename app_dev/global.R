@@ -15,6 +15,7 @@ library(mapview)
 library(lubridate)
 library(dygraphs)
 library(leaflet.minicharts)
+library(circular)
 
 # Loading and installing packages if not already installed
 
@@ -38,4 +39,8 @@ radars<-st_as_sf(radars, coords = c("longitude","latitude"),crs=4326)
 
 # vp <- separate(data = vp, col = datetime, into  = c('Date', 'Time'), sep = ' ')
 radar_names<-radars%>%distinct(location_name)
+
+#meteo info
+meteo_info<-readRDS(paste0(proj_path,"/R/data/meteo_info.rds"))
+meteo_info<-st_as_sf(meteo_info, coords = c("lng","lat"),crs=4326)
 

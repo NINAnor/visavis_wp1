@@ -15,8 +15,8 @@ function(input, output, session) {
   observeEvent(input$slid_day,{
     
     in_map1<-int_prof%>%filter(as.Date(date) == input$slid_day)%>%
-      select(mtr,vid,date,datetime,radar,dd,ff,mean_height)%>%group_by(radar,date)%>%summarise(mtr = mean(mtr, na.rm=T),
-                                                                        dd = mean(dd, na.rm = T),
+      select(mtr,vid,date,datetime,radar,dd,ff,mean_height)%>%filter(!is.na(dd))%>%group_by(radar,date)%>%summarise(mtr = mean(mtr, na.rm=T),
+                                                                        dd = mean.circular(circular(dd, units = "degrees", rotation =  "clock")),
                                                                         ff = mean(ff, na.rm = T),
                                                                         vid = mean(vid,na.rm = T),
                                                                         mean_height = mean(mean_height,na.rm=T))%>%ungroup()%>%
@@ -28,7 +28,13 @@ function(input, output, session) {
 
 
     mypal <- colorNumeric("Blues",   domain = 0:max(in_map1$mean_height)+1)
-
+    
+    met_sel<-meteo_info%>%filter(as.Date(day) == input$slid_day)%>% 
+      mutate(direction_radians = mean_wd * (pi / 180), 
+             mean_wd = round(mean_wd, 2),
+             lng_end = st_coordinates(geometry)[,1] + sin(direction_radians),
+             lat_end = st_coordinates(geometry)[,2] + cos(direction_radians))
+    
     ## map, flight direction, speed and mean flight height
     output$rad_dens<-renderLeaflet(
       leaflet() %>% addProviderTiles("CartoDB.Positron") %>%
@@ -47,6 +53,14 @@ function(input, output, session) {
                                    supValues = in_map1[c(11,7,3,5)]%>%st_drop_geometry(),
                                    digits = 0
                                    ))%>%
+        addFlows(
+          lng0 = st_coordinates(met_sel$geometry)[,1], 
+          lat0 = st_coordinates(met_sel$geometry)[,2],
+          lng1 = met_sel$lng_end, 
+          lat1 = met_sel$lat_end, 
+          dir = met_sel$direction_radians,
+          maxThickness = 3
+        )%>%
         addLegend("bottomright", 
                   title = "Flight height",
                   pal = mypal,
