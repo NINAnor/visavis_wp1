@@ -13,7 +13,10 @@ function(input, output, session) {
   
   # create static part of map
   output$rad_dens <- renderLeaflet({
-    leaflet() %>% addProviderTiles("CartoDB.Positron")   
+    leaflet() %>% addProviderTiles("CartoDB.Positron") %>%  
+      setView(lng = 10,
+              lat = 64,
+              zoom = 5)
   })
   
   # handle the update of the static map with reactive part
@@ -39,32 +42,39 @@ function(input, output, session) {
              lng_end = st_coordinates(geometry)[,1] + sin(direction_radians),
              lat_end = st_coordinates(geometry)[,2] + cos(direction_radians))
     
+    ## diff between wind and birds direction
+    dir_diff<-st_join(in_map1,met_sel,join = st_nn,k=1, maxdist = 200000, progress = FALSE)%>%mutate(diff_dir = dd - mean_wd)
+    
     # update map
     leafletProxy("rad_dens") %>%
       clearMarkers() %>%
       clearFlows()%>%
       addCircleMarkers(data = in_map1, 
                        ~st_coordinates(in_map1$geometry)[,1], ~st_coordinates(in_map1$geometry)[,2], 
-                       layerId = ~unique(radar), stroke = F)%>%
+                       layerId = ~unique(radar), stroke = T, color = "orange")%>%
       addFlows(lng0 = st_coordinates(in_map1$geometry)[,1], 
                lat0 = st_coordinates(in_map1$geometry)[,2],
                lng1 = in_map1$lng_end, 
                lat1 = in_map1$lat_end, 
                dir = in_map1$direction_radians, 
-               color =  mypal(in_map1$mean_height),
-               maxThickness= in_map1$mean_height / max(in_map1$mean_height)*3,
+               color =  "orange",
+               maxThickness= 2,
                popup = popupArgs(showTitle = TRUE,
                                  supLabels  = c("NR","Radar station","Mean flight height","MTR","Ground speed [m/s]"),
                                  supValues = in_map1[c(11,7,3,5)]%>%st_drop_geometry(),
                                  digits = 0
                ))%>%
+      addCircleMarkers(data = met_sel,
+                       ~st_coordinates(met_sel$geometry)[,1], ~st_coordinates(met_sel$geometry)[,2], 
+                        stroke = F, color = "blue")%>%
       addFlows(
         lng0 = st_coordinates(met_sel$geometry)[,1], 
         lat0 = st_coordinates(met_sel$geometry)[,2],
         lng1 = met_sel$lng_end, 
         lat1 = met_sel$lat_end, 
         dir = met_sel$direction_radians,
-        maxThickness = 3
+        color = "blue",
+        maxThickness = 2
       )
   })
   

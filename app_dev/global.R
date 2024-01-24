@@ -16,6 +16,7 @@ library(lubridate)
 library(dygraphs)
 library(leaflet.minicharts)
 library(circular)
+library(nngeo)
 
 # Loading and installing packages if not already installed
 
