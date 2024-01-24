@@ -49,7 +49,7 @@ dashboardPage(
             br(),
             h5("Hourly vertical bird density"),
             # plotlyOutput("density_time"),
-            plotOutput("day_rad")
+            withSpinner(plotOutput("day_rad"))
           )
           ))
     # fluidRow(

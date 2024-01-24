@@ -25,6 +25,7 @@ rad_inf_new<-st_join(radars, met_stat, join = st_nn, k = 1, maxdist = 200000, pr
 n = st_nn(radars, met_stat, k = 1, returnDist = TRUE, progress = FALSE)
 dists = sapply(n[[2]], "[", 1)
 rad_inf_new$dist_to_stat = dists
+
 saveRDS(rad_inf_new,paste0(proj_path,"/R/data/radar_info.rds"))
 
 
